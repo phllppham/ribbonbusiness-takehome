@@ -1,21 +1,14 @@
-import { useState } from "react";
-import { FormData } from "./OnboardingForm";
+"use client";
 
-interface ReviewStepProps {
-  formData: FormData;
-  onBack?: () => void;
-  onSubmit: () => Promise<void>;
-}
+import { ReviewStepProps } from "../../../types";
 
-export default function ReviewStep({ formData, onBack, onSubmit }: ReviewStepProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit() {
-    setIsSubmitting(true);
-    await onSubmit();
-    setIsSubmitting(false);
-  }
-
+export default function ReviewStep({
+  formData,
+  paymentData,
+  isSubmitting,
+  onBack,
+  onSubmit
+}: ReviewStepProps) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-8">
       <button
@@ -54,6 +47,14 @@ export default function ReviewStep({ formData, onBack, onSubmit }: ReviewStepPro
 
         <div className="pb-1">
           <h3 className="mb-3.5 text-[13px] font-semibold uppercase tracking-wide text-gray-500">Payment</h3>
+          <div className="flex justify-between items-start gap-4 mb-2.5">
+            <span className="text-sm text-gray-500 shrink-0 min-w-[100px]">Amount</span>
+            <span className="text-sm text-gray-900 text-right">${paymentData.amount}.00 {paymentData.currency}</span>
+          </div>
+          <div className="flex justify-between items-start gap-4 mb-2.5">
+            <span className="text-sm text-gray-500 shrink-0 min-w-[100px]">Method</span>
+            <span className="text-sm text-gray-900 text-right capitalize">{paymentData.method || 'N/A'}</span>
+          </div>
           <div className="flex justify-between items-start gap-4">
             <span className="text-sm text-gray-500 shrink-0 min-w-[100px]">Status</span>
             <span className="flex items-center gap-1.5 text-sm font-medium text-green-700">
@@ -65,7 +66,7 @@ export default function ReviewStep({ formData, onBack, onSubmit }: ReviewStepPro
 
       <button
         className="w-full h-[42px] bg-[#1b2a6b] text-white border-none rounded-md text-[15px] font-medium font-[inherit] enabled:cursor-pointer hover:enabled:bg-[#15235a] disabled:bg-gray-400 disabled:cursor-not-allowed"
-        onClick={handleSubmit}
+        onClick={onSubmit}
         disabled={isSubmitting}
       >
         {isSubmitting ? "Submitting…" : "Submit Registration"}

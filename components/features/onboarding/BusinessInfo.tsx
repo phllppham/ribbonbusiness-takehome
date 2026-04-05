@@ -1,18 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { FormData } from "./OnboardingForm";
-
-interface BusinessInfoProps {
-  formData: FormData;
-  onFormDataChange: (updates: Partial<FormData>) => void;
-  onNext: () => void;
-}
-
-interface FieldErrors {
-  businessName: string;
-  ownerName: string;
-  email: string;
-  address: string;
-}
+import { FormData, FieldErrors, BusinessInfoProps } from "../../../types";
 
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -62,17 +51,39 @@ const emptyErrors: FieldErrors = {
 
 export default function BusinessInfo({
   formData,
+  isRejected,
+  paymentConfirmed,
   onFormDataChange,
   onNext,
+  onRejectionAcknowledged,
 }: BusinessInfoProps) {
   const [errors, setErrors] = useState<FieldErrors>(emptyErrors);
 
+  const businessNameError = isRejected
+    ? "This name is already taken. Please choose a different business name"
+    : errors.businessName;
+
   function handleAdvance() {
     const validationErrors = validateFields(formData);
+    if (isRejected) {
+      validationErrors.businessName =
+        "This name is already taken. Please choose a different business name";
+    }
     setErrors(validationErrors);
-    const hasErrors = Object.values(validationErrors).some((e) => e !== "");
+
+    const hasErrors = Object.values(validationErrors).some(
+      (error) => error !== ""
+    );
     if (!hasErrors) {
       onNext();
+    }
+  }
+
+  function handleBusinessNameChange(value: string) {
+    onFormDataChange({ businessName: value });
+    if (isRejected) {
+      onRejectionAcknowledged();
+      setErrors((prev) => ({ ...prev, businessName: "" }));
     }
   }
 
@@ -84,8 +95,20 @@ export default function BusinessInfo({
     <div className="bg-white border border-gray-200 rounded-lg p-8">
       <h2 className="mb-1.5 text-xl font-semibold text-gray-900">Business Information</h2>
       <p className="mb-7 text-sm text-gray-500">
-        Let's get started by telling us about your business.
+        Let&apos;s get started by telling us about your business.
       </p>
+
+      {paymentConfirmed && (
+        <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">✓</span>
+            <span className="text-sm font-medium text-green-800">Payment already confirmed</span>
+          </div>
+          <p className="text-xs text-green-700 mt-1">
+            You&apos;ll skip the payment step and proceed directly to review.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col mb-5">
         <label htmlFor="businessName" className="text-sm font-medium text-gray-700 mb-1.5">
@@ -95,12 +118,12 @@ export default function BusinessInfo({
           id="businessName"
           type="text"
           value={formData.businessName}
-          onChange={(e) => onFormDataChange({ businessName: e.target.value })}
-          className={`${inputBase} ${errors.businessName ? inputError : inputNormal}`}
+          onChange={(e) => handleBusinessNameChange(e.target.value)}
+          className={`${inputBase} ${businessNameError ? inputError : inputNormal}`}
           placeholder="e.g. Tree Services Inc."
         />
-        {errors.businessName && (
-          <span className="mt-1 text-[13px] text-red-600">{errors.businessName}</span>
+        {businessNameError && (
+          <span className="mt-1 text-[13px] text-red-600">{businessNameError}</span>
         )}
       </div>
 

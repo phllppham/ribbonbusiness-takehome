@@ -1,67 +1,80 @@
 "use client";
 
-import { useState } from "react";
-import ProgressIndicator from "../../shared/ProgressIndicator";
+import { useOnboarding } from "../../../contexts/OnboardingContext";
 import BusinessInfo from "./BusinessInfo";
 import PaymentStep from "./PaymentStep";
 import ReviewStep from "./ReviewStep";
 import CompleteStep from "./CompleteStep";
-
-export interface FormData {
-  businessName: string;
-  ownerName: string;
-  email: string;
-  address: string;
-}
-
-interface OnboardingState {
-  currentStep: number;
-  formData: FormData;
-  paymentConfirmed: boolean;
-}
+import ProgressIndicator from "../../shared/ProgressIndicator";
+import mockData from "../../../mock-data.json";
 
 const TOTAL_STEPS = 4;
 
-const initialFormData: FormData = {
-  businessName: "",
-  ownerName: "",
-  email: "",
-  address: "",
-};
-
 export default function OnboardingForm() {
-  const [state, setState] = useState<OnboardingState>({
-    currentStep: 1,
-    formData: initialFormData,
-    paymentConfirmed: false,
-  });
+  const { state, actions } = useOnboarding();
 
-  function handleFormDataChange(updates: Partial<FormData>) {
-    setState((prev) => ({
-      ...prev,
-      formData: { ...prev.formData, ...updates },
-    }));
-  }
+  const getNextStep = (fromStep: number): number => {
+    if (fromStep === 1 && state.paymentData.confirmed) {
+      // Skip payment step if already confirmed
+      return 3;
+    }
+    return fromStep + 1;
+  };
 
-  function handleAdvanceToStep(step: number) {
-    setState((prev) => ({ ...prev, currentStep: step }));
-  }
+  const handleAdvanceToStep = (fromStep: number) => {
+    const nextStep = getNextStep(fromStep);
+    actions.setStep(nextStep);
+  };
 
-  const handleBack = () =>
-    setState((prev) => ({ ...prev, currentStep: prev.currentStep - 1 }));
+  const handleBack = () => {
+    actions.goToPreviousStep();
+  };
 
-  function handlePaymentConfirmed() {
-    setState((prev) => ({ ...prev, paymentConfirmed: true }));
-  }
-
-  async function handleSubmit(): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setState((prev) => ({ ...prev, currentStep: 4 }));
-        resolve();
-      }, 1500);
+  const handlePaymentConfirmed = () => {
+    actions.updatePaymentData({
+      confirmed: true,
     });
-  }
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    actions.setSubmitting(true);
+
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const businessName = state.formData.businessName.trim().toLowerCase();
+      const isConflict = mockData.conflictingNames.map((n: string) => n.toLowerCase()).includes(businessName);
+
+      if (isConflict) {
+        // Registration rejected - business name conflict
+        actions.setRejected(true);
+        actions.setStep(1);
+        actions.setSubmissionResult({
+          success: false,
+          error: 'Business name already exists. Please choose a different name.',
+        });
+      } else {
+        // Registration successful
+        actions.setRejected(false);
+        actions.setStep(4);
+        actions.setSubmissionResult({
+          success: true,
+        });
+      }
+    } catch (error) {
+      actions.setSubmissionResult({
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      actions.setSubmitting(false);
+    }
+  };
+
+  const handleRejectionAcknowledged = () => {
+    actions.setRejected(false);
+  };
 
   return (
     <div className="h-screen overflow-hidden bg-[#f7f8fa] flex flex-col items-stretch font-sans m-0 p-0">
@@ -74,30 +87,42 @@ export default function OnboardingForm() {
           totalSteps={TOTAL_STEPS}
         />
         <h1 className="mb-5 text-[22px] font-bold text-[#1b2a6b] tracking-tight">Start a Sole Proprietorship</h1>
+
         {state.currentStep === 1 && (
           <BusinessInfo
             formData={state.formData}
-            onFormDataChange={handleFormDataChange}
+            isRejected={state.isRejected}
+            paymentConfirmed={state.paymentData.confirmed}
+            onFormDataChange={actions.updateFormData}
+            onNext={() => handleAdvanceToStep(1)}
+            onRejectionAcknowledged={handleRejectionAcknowledged}
+          />
+        )}
+
+        {state.currentStep === 2 && (
+          <PaymentStep
+            paymentData={state.paymentData}
+            onPaymentDataChange={actions.updatePaymentData}
+            onBack={handleBack}
             onNext={() => handleAdvanceToStep(2)}
           />
         )}
-        {state.currentStep === 2 && (
-          <PaymentStep
-            paymentConfirmed={state.paymentConfirmed}
-            onPaymentConfirmed={handlePaymentConfirmed}
-            onBack={handleBack}
-            onNext={() => handleAdvanceToStep(3)}
-          />
-        )}
+
         {state.currentStep === 3 && (
           <ReviewStep
             formData={state.formData}
+            paymentData={state.paymentData}
+            isSubmitting={state.isSubmitting}
             onBack={handleBack}
             onSubmit={handleSubmit}
           />
         )}
+
         {state.currentStep === 4 && (
-          <CompleteStep businessName={state.formData.businessName} />
+          <CompleteStep
+            businessName={state.formData.businessName}
+            submissionResult={state.submissionResult}
+          />
         )}
       </div>
     </div>
