@@ -1,7 +1,3 @@
-/**
- * Shared types and interfaces for the onboarding flow
- */
-
 export interface FormData {
   businessName: string;
   ownerName: string;

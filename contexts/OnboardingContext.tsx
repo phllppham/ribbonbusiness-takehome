@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode } from 'react';
 import { OnboardingState, FormData, PaymentData, SubmissionResult } from '../types';
 
 type OnboardingAction =
@@ -9,8 +9,7 @@ type OnboardingAction =
   | { type: 'SET_STEP'; payload: number }
   | { type: 'SET_REJECTED'; payload: boolean }
   | { type: 'SET_SUBMITTING'; payload: boolean }
-  | { type: 'SET_SUBMISSION_RESULT'; payload: SubmissionResult }
-  | { type: 'RESET_FORM' };
+  | { type: 'SET_SUBMISSION_RESULT'; payload: SubmissionResult };
 
 const initialPaymentData: PaymentData = {
   amount: 50,
@@ -72,9 +71,6 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
         submissionResult: action.payload,
       };
 
-    case 'RESET_FORM':
-      return initialState;
-
     default:
       return state;
   }
@@ -82,17 +78,14 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
 
 interface OnboardingContextType {
   state: OnboardingState;
-  dispatch: React.Dispatch<OnboardingAction>;
   actions: {
     updateFormData: (updates: Partial<FormData>) => void;
     updatePaymentData: (updates: Partial<PaymentData>) => void;
     setStep: (step: number) => void;
-    goToNextStep: () => void;
     goToPreviousStep: () => void;
     setRejected: (rejected: boolean) => void;
     setSubmitting: (submitting: boolean) => void;
     setSubmissionResult: (result: SubmissionResult) => void;
-    resetForm: () => void;
   };
 }
 
@@ -114,10 +107,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_STEP', payload: step });
     },
 
-    goToNextStep: () => {
-      dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-    },
-
     goToPreviousStep: () => {
       dispatch({ type: 'SET_STEP', payload: state.currentStep - 1 });
     },
@@ -134,13 +123,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SUBMISSION_RESULT', payload: result });
     },
 
-    resetForm: () => {
-      dispatch({ type: 'RESET_FORM' });
-    },
   };
 
   return (
-    <OnboardingContext.Provider value={{ state, dispatch, actions }}>
+    <OnboardingContext.Provider value={{ state, actions }}>
       {children}
     </OnboardingContext.Provider>
   );

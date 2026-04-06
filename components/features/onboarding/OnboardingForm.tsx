@@ -30,12 +30,6 @@ export default function OnboardingForm() {
     actions.goToPreviousStep();
   };
 
-  const handlePaymentConfirmed = () => {
-    actions.updatePaymentData({
-      confirmed: true,
-    });
-  };
-
   const handleSubmit = async (): Promise<void> => {
     actions.setSubmitting(true);
 
