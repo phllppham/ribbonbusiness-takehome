@@ -25,7 +25,7 @@ I want to highlight ‘OnboardingProvider’ in page.tsx. This wraps ‘Onboardi
 ‘OnboardingContext’ contains 
 - ‘currentStep’: Step in onboarding that is being shown, controls what component is happening in ‘OnboardingForm’
 - ‘formData’: Holds the 4 required input fields from ‘BusinessInfo’ (Business name, owner, email, and address)
-- ‘paymentData’: Hold payment details with ‘confirmed’, ‘method’, ‘amount’, and ‘currency’. ‘confirmed’ is what controls whether Continue buttonin ‘PaymentStep’ is disabled
+- ‘paymentData’: Hold payment details with ‘confirmed’, ‘method’, ‘amount’, and ‘currency’. ‘confirmed’ is what controls whether Continue button in ‘PaymentStep’ is disabled
 - ‘isSubmitting’: used by ‘ReviewStep’ to disable submit button and indiciate visual loading
 - ‘isRejected’: Tracks whether the last submission was rejected due to business name conflict. When true, ‘BusinessInfo’ shows the error and blocks the user from advancing
 - ‘submissionResult’: Holds outcome of last submission, with a ‘success’ boolean or ‘error’ message. ‘CompleteStep’ uses this to decide determine what to show next
@@ -78,4 +78,3 @@ Since each one drives the overall flow. ‘currentStep’ controls which compone
 - Connect rejections to real API that checks for name conflicts in government registry
 - Loading state to show visual feedback on submissions or confirmations
 - Expand address field into separate inputs (Address, city, province, postal code), more similar to registration forms and further validation
-
